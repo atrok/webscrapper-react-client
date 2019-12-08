@@ -1,0 +1,15 @@
+{
+    "uahelper": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-webscrapper-client-uahelper-164410-authRole",
+            "UnauthRoleArn": "arn:aws:iam::053923949816:role/amplify-webscrapper-client-uahelper-164410-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::053923949816:role/amplify-webscrapper-client-uahelper-164410-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "amplify-webscrapper-client-uahelper-164410-deployment",
+            "UnauthRoleName": "amplify-webscrapper-client-uahelper-164410-unauthRole",
+            "StackName": "amplify-webscrapper-client-uahelper-164410",
+            "StackId": "arn:aws:cloudformation:us-east-1:053923949816:stack/amplify-webscrapper-client-uahelper-164410/586b29e0-16f8-11ea-b537-0e27f3a268d6",
+            "AmplifyAppId": "d2130xesmj6yql"
+        }
+    }
+}
