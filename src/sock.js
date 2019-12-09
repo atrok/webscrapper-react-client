@@ -1,21 +1,52 @@
 import openSocket from "socket.io-client";
 
 
-const socket = openSocket('http://localhost:3030');
+var socket = null;
+var getsocket = function () {
 
-function startJob() {
-
-    socket.emit('start job', null);
+    console.log(socket);
+    if (socket === null) {
+        socket = openSocket('http://localhost:3030');
+        console.log("Opening socketio socket, connection: ", socket.connected);
+    }
+    return socket
 }
 
-class CreateReport {
 
-    constructor(s) {
+class NotificationsIO {
+    constructor() {
+        this.id = "NotificationsIO_" + Date.now()
+        this.socket = getsocket();
+        console.log("Obtained socketio socket, connection: ", this.socket.connected);
+        this.toConsole("Instantiating base class NotificationsIO");
+
+    }
+
+    subscribe(that) {
+        this.toConsole('Subscribing to report ', that.state.id)
+
+    }
+    unsubscribe(that) {
+        this.toConsole("Unsubscribing from getting report " + that.state.id);
+
+    }
+
+    toConsole(...args) {
+        var msgflat = args.join(' ');
+        console.log("[" + this.id + "]", msgflat)
+    }
+
+}
+class CreateReport extends NotificationsIO {
+
+    constructor() {
+        super();
+
         var that = this;
 
+        this.toConsole("Instantiating");
         that.id = "Report_" + Date.now();
 
-        that.socket = s;
         that.subscribers = [];
 
         that.socket.on('report', data => {
@@ -42,32 +73,51 @@ class CreateReport {
         this.subscribers = this.subscribers.filter(el => el !== that);
     }
 
-    toConsole(...args) {
-        var msgflat = args.join(' ');
-        console.log("[" + this.id + "]", msgflat)
-    }
-    /*
-    getReport(jobid, cb) {
-
-        console.log(cb)
-        this.socket.on('report', data => {
-            console.log('report arrived: ' + JSON.stringify(data));
-            cb(data)
-        });
-
-        socket.emit('getReport', jobid);
-    }
-    */
 }
 
-var Report = new CreateReport(socket);
+class JobNotifications extends NotificationsIO {
+    constructor() {
+        super()
+        var that = this;
 
-function subscribeToJobNotifications(jobid, cb) {
+        that.id = "Report_" + Date.now();
 
-    socket.on('client data', data => {
-        console.log('job data arrived: ' + JSON.stringify(data));
-        cb(data)
-    });
+        this.toConsole("Instantiating");
+        that.subscribers = [];
 
-    //socket.emit('getJobNotifications', jobid);
-} export { subscribeToJobNotifications, startJob, Report }
+        that.socket.on('client data', data => {
+            that.toConsole('client data arrived: ', JSON.stringify(data));
+            if (!data.error) {
+                that.toConsole('Subscribers: ', this.subscribers.length);
+                if (this.subscribers.length > 0)
+                    that.subscribers.forEach(el => {
+                        el.getReport(data)
+                    });
+            };
+        })
+    }
+
+    subscribe(that) {
+        this.toConsole('Subscribing to report ', that.state.id)
+        this.subscribers.push(that);
+        //this.socket.emit('getReport', that.props.data.jobid);
+    }
+    unsubscribe(that) {
+        this.toConsole("Unsubscribing from getting report " + that.state.id);
+        this.subscribers = this.subscribers.filter(el => el !== that);
+    }
+
+    startJob() {
+
+        this.socket.emit('start job', null);
+    }
+}
+
+/*
+console.log("Instantiating notifications");
+var Report = new CreateReport();
+var JobNotification = new JobNotifications();
+*/
+
+//socket.emit('getJobNotifications', jobid);
+export { CreateReport, JobNotifications }

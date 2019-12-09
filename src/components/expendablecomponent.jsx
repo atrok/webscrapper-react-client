@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import DataTable from "react-data-table-component";
-import { Report } from '../sock';
-import makeCancellable from '../lib/cancellable';
+import { CreateReport } from '../sock';
+//import makeCancellable from '../lib/cancellable';
 
 const dt_errors_columns = [
     {
@@ -86,11 +86,13 @@ class ExpendableComponent extends Component {
                 }
             },
         }
+
+        this.report = new CreateReport();
     }
 
     componentDidMount() {
         console.log("Subscribe for report notifications, ", this.state.id);
-        Report.subscribe(this);
+        this.report.subscribe(this);
 
     }
 
@@ -107,7 +109,7 @@ class ExpendableComponent extends Component {
 
 
     componentWillUnmount() {
-        Report.unsubscribe(this)
+        this.report.unsubscribe(this)
     }
 
     renderReport() {

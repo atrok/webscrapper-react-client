@@ -1,10 +1,15 @@
 import React, { Component } from 'react';
 
 import DataTable from "react-data-table-component";
-import { subscribeToJobNotifications, startJob, getReport } from './sock';
+import { JobNotifications } from './sock';
 import ExpendableComponent from './components/expendablecomponent';
 
+import { withAuthenticator } from 'aws-amplify-react'; // or 'aws-amplify-react-native';
+import Amplify from 'aws-amplify';
+// Get the aws resources configuration parameters
+import awsconfig from './aws-exports'; // if you are using Amplify CLI
 
+Amplify.configure(awsconfig);
 
 
 
@@ -45,32 +50,44 @@ const columns = [
 class App extends Component {
   constructor() {
     super();
+    this.id = Date.now();
     this.state = {
       response: 0,
-      endpoint: "http://19.168.14.91:3030",
+      endpoint: "http://192.168.14.91:3030",
       columns: columns,
-      data: data
+      data: data,
+      id: "Application_" + Date.now()
     };
+
+    this.notification = new JobNotifications();
+
+    console.log("Instantiating ", this.state.id)
   }
 
   componentDidMount() {
 
-    var { tdata } = this.state;
+    console.log("componentDidMount ", this.state.id)
 
-    console.log(tdata)
-
-    subscribeToJobNotifications(null, (msgdata) => {
-      this.setState({
-        data: msgdata
-      })
-    }
-    );
+    this.notification.subscribe(this);
   }
 
+  //Report helper function
+  getReport(msgdata) {
+
+    this.setState({
+      data: msgdata
+    })
+  }
+
+  componentWillUnmount() {
+    this.notification.unsubscribe(this);
+  }
   render() {
     const { columns, data } = this.state;
+    console.log("Rendering " + this.state.id)
     return (
       <div className='m-2'>
+        <h1>Genesys Release notes webscrapper service</h1>
         <DataTable
           title="List of available scrapper jobs"
           columns={columns}
@@ -79,11 +96,14 @@ class App extends Component {
           expandableRowsComponent={<ExpendableComponent />}
         />
         <div>
-          <button key="startJob" onClick={() => startJob()}>Start immediate job</button>
+          <button key="startJob" onClick={() => this.notification.startJob()}>Start immediate job</button>
         </div>
       </div>
     )
   }
 };
 
-export default App;
+export default withAuthenticator(App, {
+  // Render a sign out button once logged in
+  includeGreetings: true
+});
